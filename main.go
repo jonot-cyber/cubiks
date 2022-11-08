@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/gin-gonic/gin"
 	"log"
 	"math/rand"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -34,7 +35,7 @@ func (m Move) String() string {
 	return b.String()
 }
 
-var sides []rune = []rune{'F', 'B', 'L', 'R', 'U', 'D'}
+var sides = []rune{'F', 'B', 'L', 'R', 'U', 'D'}
 
 func SideAxis(s rune) (int, error) {
 	switch s {
@@ -46,10 +47,6 @@ func SideAxis(s rune) (int, error) {
 		return Z, nil
 	}
 	return 0, errors.New("invalid rune")
-}
-
-func RandomBool() bool {
-	return rand.Intn(2) == 1
 }
 
 func RandomMove(lastMove Move) (Move, error) {
@@ -95,15 +92,38 @@ func RandomMoves(count int) ([]Move, error) {
 }
 
 func main() {
-	defer func(start time.Time) {
-		fmt.Println(time.Since(start))
-	}(time.Now())
+	gin.SetMode(gin.ReleaseMode)
 	rand.Seed(time.Now().UnixMicro())
-	for i := 0; i < 1_000_000; i++ {
+	r := gin.Default()
+	r.LoadHTMLFiles("index.gohtml")
+	r.GET("/scramble", func(c *gin.Context) {
 		moves, err := RandomMoves(20)
 		if err != nil {
-			log.Fatal(err)
+			c.Status(http.StatusInternalServerError)
+			return
 		}
-		fmt.Println(moves)
+		res := make([]string, len(moves))
+		for i := range res {
+			res[i] = moves[i].String()
+		}
+		c.JSON(http.StatusOK, res)
+	})
+	r.GET("/", func(c *gin.Context) {
+		moves, err := RandomMoves(20)
+		if err != nil {
+			c.Status(http.StatusInternalServerError)
+			return
+		}
+		res := make([]string, len(moves))
+		for i := range res {
+			res[i] = moves[i].String()
+		}
+		c.HTML(http.StatusOK, "index.gohtml", gin.H{
+			"scramble": strings.Join(res, " "),
+		})
+	})
+	err := r.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
