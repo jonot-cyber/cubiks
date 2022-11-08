@@ -1,4 +1,4 @@
 # cubiks
-Generate rubiks cube shuffles
+Generate Rubik's Cube shuffles (ON DA WEB!!!)
 
-`./cubiks <number>`
+`./cubiks`

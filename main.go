@@ -2,10 +2,12 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 )
@@ -122,7 +124,16 @@ func main() {
 			"scramble": strings.Join(res, " "),
 		})
 	})
-	err := r.Run()
+	port := "8080"
+	if len(os.Args) > 2 {
+		fmt.Println("USAGE: ./cubiks <port>")
+		fmt.Println("       ./cubiks (defaults to 8080)")
+		return
+	}
+	if len(os.Args) == 2 {
+		port = os.Args[1]
+	}
+	err := r.Run(":" + port)
 	if err != nil {
 		log.Fatal(err)
 	}
